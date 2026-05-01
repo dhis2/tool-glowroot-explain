@@ -489,7 +489,7 @@ def test_split_verbose_works_without_rows_section():
 ```
 
 Run: `uv run --with pytest pytest tests/test_parser.py -k "split_verbose" -v`
-Expected: 5 passed.
+Expected: 6 passed.
 
 - [ ] **Step 5: Commit**
 
