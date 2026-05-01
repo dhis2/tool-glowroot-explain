@@ -1,0 +1,1 @@
+jdbc query: SELECT trackedentitytypeid FROM trackedentitytype  WHERE sharing->>'public' LIKE '__r%' OR sharing->>'public' IS NULL OR sharing->'users'->?->>'access' LIKE '__r%' ['SM2asR96Qwi'] => 5 rows

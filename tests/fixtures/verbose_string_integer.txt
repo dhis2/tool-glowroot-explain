@@ -1,0 +1,59 @@
+jdbc query:
+
+SELECT user0_.userinfoid AS userinfo1_234_,
+       user0_.uid AS uid2_234_,
+       user0_.code AS code3_234_,
+       user0_.lastUpdated AS lastupda4_234_,
+       user0_.created AS created5_234_,
+       user0_.surname AS surname6_234_,
+       user0_.firstName AS firstnam7_234_,
+       user0_.email AS email8_234_,
+       user0_.phoneNumber AS phonenum9_234_,
+       user0_.jobTitle AS jobtitl10_234_,
+       user0_.introduction AS introdu11_234_,
+       user0_.gender AS gender12_234_,
+       user0_.birthday AS birthda13_234_,
+       user0_.nationality AS nationa14_234_,
+       user0_.employer AS employe15_234_,
+       user0_.education AS educati16_234_,
+       user0_.interests AS interes17_234_,
+       user0_.languages AS languag18_234_,
+       user0_.welcomeMessage AS welcome19_234_,
+       user0_.lastCheckedInterpretations AS lastche20_234_,
+       user0_.whatsApp AS whatsap21_234_,
+       user0_.skype AS skype22_234_,
+       user0_.facebookMessenger AS faceboo23_234_,
+       user0_.telegram AS telegra24_234_,
+       user0_.twitter AS twitter25_234_,
+       user0_.lastupdatedby AS lastupd26_234_,
+       user0_.avatar AS avatar27_234_,
+       user0_.dataviewmaxorgunitlevel AS datavie28_234_,
+       user0_.attributeValues AS attribu29_234_,
+       user0_.uuid AS uuid30_234_,
+       user0_.creatoruserid AS creator31_234_,
+       user0_.username AS usernam32_234_,
+       user0_.password AS passwor33_234_,
+       user0_.secret AS secret34_234_,
+       user0_.externalauth AS externa35_234_,
+       user0_.openid AS openid36_234_,
+       user0_.ldapid AS ldapid37_234_,
+       user0_.passwordLastUpdated AS passwor38_234_,
+       user0_.lastLogin AS lastlog39_234_,
+       user0_.idToken AS idtoken40_234_,
+       user0_.restoreToken AS restore41_234_,
+       user0_.restoreExpiry AS restore42_234_,
+       user0_.selfRegistered AS selfreg43_234_,
+       user0_.invitation AS invitat44_234_,
+       user0_.disabled AS disable45_234_,
+       user0_.accountExpiry AS account46_234_
+  FROM userinfo user0_
+ WHERE user0_.username = ?
+ LIMIT ?
+
+parameters:
+
+  ['130713_P6', 1]
+
+rows:
+
+  => 1 row
