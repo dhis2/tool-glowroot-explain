@@ -17,9 +17,15 @@ def index():
     return render_template_string(HTML)
 
 
+_VALID_FORMATS = {"TEXT", "JSON", "XML", "YAML"}
+
+
 @app.post("/transform")
 def transform():
-    data = request.get_json(force=True)
+    data = request.get_json(force=True) or {}
+    fmt = str(data.get("format", "TEXT")).upper()
+    if fmt not in _VALID_FORMATS:
+        return jsonify({"error": f"Invalid format '{fmt}'. Must be one of: TEXT, JSON, XML, YAML."}), 400
     raw = data.get("trace", "")
     options = {
         "analyze":      bool(data.get("analyze")),
@@ -32,7 +38,7 @@ def transform():
         "timing":       bool(data.get("timing")),
         "wal":          bool(data.get("wal")),
         "summary":      bool(data.get("summary")),
-        "format":       data.get("format", "TEXT"),
+        "format":       fmt,
     }
     try:
         sql, params = parse_glowroot_trace(raw)
