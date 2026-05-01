@@ -10,6 +10,8 @@ _OPTION_ORDER = [
     "buffers", "timing", "wal", "summary",
 ]
 
+_DML_FIRST_WORDS = {"insert", "update", "delete", "merge", "truncate", "execute"}
+
 
 def _is_verbose(raw: str) -> bool:
     return bool(re.search(r'^\s*parameters:\s*$', raw, re.MULTILINE))
@@ -106,9 +108,31 @@ def _build_explain_clause(options: dict) -> str:
     return f"EXPLAIN ({', '.join(parts)})"
 
 
+def _is_dml(sql: str) -> bool:
+    words = sql.strip().lower().split()
+    if not words:
+        return False
+    if words[0] in _DML_FIRST_WORDS:
+        return True
+    # Only "CREATE TABLE ... AS (SELECT ...)" is DML — plain DDL "CREATE TABLE foo (...)" is not
+    if len(words) >= 3 and words[0] == "create" and words[1] == "table" and "as" in words:
+        return True
+    return False
+
+
 def parse_glowroot_trace(raw: str) -> tuple[str, list[str]]:
     raise NotImplementedError
 
 
 def generate_explain_sql(sql: str, params: list[str], options: dict) -> str:
-    raise NotImplementedError
+    if not sql.strip():
+        raise ParseError("No SQL found in the trace.")
+    substituted = _substitute(sql, params)
+    clause = _build_explain_clause(options)
+    explain = f"{clause}\n{substituted};"
+    if options.get("analyze") and _is_dml(substituted):
+        explain = (
+            "-- Statement type may modify data: wrapped in transaction for safety\n"
+            f"BEGIN;\n{explain}\nROLLBACK;"
+        )
+    return explain

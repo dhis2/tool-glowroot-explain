@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError, _is_verbose, _split_verbose, _split_compact, _parse_param_list, _substitute, _build_explain_clause
+from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError, _is_verbose, _split_verbose, _split_compact, _parse_param_list, _substitute, _build_explain_clause, _is_dml
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -251,3 +251,73 @@ def test_explain_clause_format_json():
 def test_explain_clause_format_always_last():
     opts = {**_ALL_OFF, "verbose": True, "format": "YAML"}
     assert _build_explain_clause(opts).endswith("FORMAT YAML)")
+
+
+def test_select_is_not_dml():
+    assert _is_dml("SELECT 1") is False
+
+
+def test_delete_is_dml():
+    assert _is_dml("DELETE FROM foo WHERE id = 1") is True
+
+
+def test_insert_is_dml():
+    assert _is_dml("INSERT INTO foo VALUES (1)") is True
+
+
+def test_update_is_dml():
+    assert _is_dml("UPDATE foo SET x = 1") is True
+
+
+def test_merge_is_dml():
+    assert _is_dml("MERGE INTO foo USING bar ON foo.id = bar.id") is True
+
+
+def test_truncate_is_dml():
+    assert _is_dml("TRUNCATE TABLE foo") is True
+
+
+def test_execute_is_dml():
+    assert _is_dml("EXECUTE my_prepared_plan") is True
+
+
+def test_create_table_as_is_dml():
+    assert _is_dml("CREATE TABLE foo AS SELECT 1") is True
+
+
+def test_plain_create_table_is_not_dml():
+    # CREATE TABLE without AS is plain DDL — should not be wrapped
+    assert _is_dml("CREATE TABLE foo (id int)") is False
+
+
+def test_dml_detection_is_case_insensitive():
+    assert _is_dml("delete from foo") is True
+
+
+def test_dml_detection_ignores_leading_whitespace():
+    assert _is_dml("  \n  DELETE FROM foo") is True
+
+
+def test_delete_with_analyze_wraps_in_transaction():
+    result = generate_explain_sql(
+        "DELETE FROM foo WHERE id = 1",
+        [],
+        {**ANALYZE_OPTIONS, "costs": False},
+    )
+    assert result == (
+        "-- Statement type may modify data: wrapped in transaction for safety\n"
+        "BEGIN;\n"
+        "EXPLAIN (ANALYZE, BUFFERS, TIMING, SUMMARY, FORMAT TEXT)\n"
+        "DELETE FROM foo WHERE id = 1;\n"
+        "ROLLBACK;"
+    )
+
+
+def test_select_with_analyze_is_not_wrapped():
+    result = generate_explain_sql(
+        "SELECT 1 WHERE x = ?",
+        ["42"],
+        {**ANALYZE_OPTIONS, "costs": False},
+    )
+    assert "BEGIN;" not in result
+    assert "ROLLBACK;" not in result
