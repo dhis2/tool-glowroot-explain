@@ -90,10 +90,8 @@ def _substitute(sql: str, params: list[str]) -> str:
         raise ParseError(f"SQL has {count} '?' placeholders but only {len(params)} parameters were found.")
     if len(params) > count:
         raise ParseError(f"Found {len(params)} parameters but SQL only has {count} '?' placeholders.")
-    result = sql
-    for param in params:
-        result = result.replace('?', param, 1)
-    return result
+    parts = sql.split('?')
+    return ''.join(part + param for part, param in zip(parts, params)) + parts[-1]
 
 
 def parse_glowroot_trace(raw: str) -> tuple[str, list[str]]:

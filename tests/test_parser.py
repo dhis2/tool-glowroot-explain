@@ -212,3 +212,7 @@ def test_substitute_raises_empty_params_with_placeholders():
 
 def test_substitute_no_placeholders_no_params_is_valid():
     assert _substitute("SELECT 1", []) == "SELECT 1"
+
+
+def test_substitute_param_containing_question_mark():
+    assert _substitute("WHERE a = ? AND b = ?", ["'what?'", "42"]) == "WHERE a = 'what?' AND b = 42"
