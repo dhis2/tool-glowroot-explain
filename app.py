@@ -19,7 +19,27 @@ def index():
 
 @app.post("/transform")
 def transform():
-    return jsonify({"error": "not implemented"}), 501
+    data = request.get_json(force=True)
+    raw = data.get("trace", "")
+    options = {
+        "analyze":      bool(data.get("analyze")),
+        "verbose":      bool(data.get("verbose")),
+        "costs":        bool(data.get("costs")),
+        "settings":     bool(data.get("settings")),
+        "memory":       bool(data.get("memory")),
+        "generic_plan": bool(data.get("generic_plan")),
+        "buffers":      bool(data.get("buffers")),
+        "timing":       bool(data.get("timing")),
+        "wal":          bool(data.get("wal")),
+        "summary":      bool(data.get("summary")),
+        "format":       data.get("format", "TEXT"),
+    }
+    try:
+        sql, params = parse_glowroot_trace(raw)
+        result = generate_explain_sql(sql, params, options)
+        return jsonify({"sql": result})
+    except ParseError as e:
+        return jsonify({"error": str(e)}), 400
 
 
 if __name__ == "__main__":
