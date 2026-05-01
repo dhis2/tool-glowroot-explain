@@ -22,6 +22,8 @@ def _split_verbose(raw: str) -> tuple[str, str]:
 def _split_compact(raw: str) -> tuple[str, str]:
     text = re.sub(r'(?i)^\s*jdbc\s+query:\s*', '', raw.strip(), count=1)
     text = re.sub(r'=>\s*\d+\s+rows?\s*$', '', text).strip()
+    # rfind finds the last '[' — assumes no string parameter value contains '['.
+    # SQL-side brackets (array subscripts, JSON operators) always appear before the param block.
     bracket_start = text.rfind('[')
     if bracket_start == -1:
         raise ParseError("Could not find a parameter list '[...]' in the trace.")
