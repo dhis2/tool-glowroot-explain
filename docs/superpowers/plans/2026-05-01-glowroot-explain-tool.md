@@ -367,13 +367,6 @@ def test_parameters_inside_sql_string_does_not_trigger_verbose():
     assert _is_verbose(raw) is False
 
 
-def test_parameters_as_column_alias_in_verbose_body_does_not_confuse_split():
-    # 'parameters:' appears as a column alias in the SQL body but the real
-    # 'parameters:' section line is still present and detected correctly
-    raw = "jdbc query:\n\nSELECT col AS \"parameters:\", x\n  FROM t\n WHERE y = ?\n\nparameters:\n\n  [1]\n\nrows:\n\n  => 0 rows"
-    assert _is_verbose(raw) is True
-    sql, param_block = _split_verbose(raw)
-    assert param_block == "[1]"
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -446,6 +439,14 @@ def test_split_verbose_preserves_multiline_sql():
     sql, _ = _split_verbose(raw)
     assert "SELECT a," in sql
     assert "WHERE x = ?" in sql
+
+
+def test_split_verbose_not_confused_by_parameters_alias_in_sql_body():
+    # 'parameters:' appears as a column alias inside the SQL but the real
+    # section marker is still correctly found and split on
+    raw = "jdbc query:\n\nSELECT col AS \"parameters:\", x\n  FROM t\n WHERE y = ?\n\nparameters:\n\n  [1]\n\nrows:\n\n  => 0 rows"
+    sql, param_block = _split_verbose(raw)
+    assert param_block == "[1]"
 ```
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -475,7 +476,7 @@ def _split_verbose(raw: str) -> tuple[str, str]:
 uv run --with pytest pytest tests/test_parser.py -k "split_verbose" -v
 ```
 
-Expected: 4 passed.
+Expected: 5 passed.
 
 - [ ] **Step 4b: Add edge-case test for missing `rows:` section**
 
@@ -725,7 +726,7 @@ def _parse_param_list(param_block: str) -> list[str]:
 uv run --with pytest pytest tests/test_parser.py -k "parse_" -v
 ```
 
-Expected: 13 passed.
+Expected: 14 passed.
 
 - [ ] **Step 5: Commit**
 
