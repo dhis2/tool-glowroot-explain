@@ -1,5 +1,12 @@
+import re
+
+
 class ParseError(ValueError):
     pass
+
+
+def _is_verbose(raw: str) -> bool:
+    return bool(re.search(r'^\s*parameters:\s*$', raw, re.MULTILINE))
 
 
 def parse_glowroot_trace(raw: str) -> tuple[str, list[str]]:
