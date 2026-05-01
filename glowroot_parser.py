@@ -121,7 +121,16 @@ def _is_dml(sql: str) -> bool:
 
 
 def parse_glowroot_trace(raw: str) -> tuple[str, list[str]]:
-    raise NotImplementedError
+    if not raw.strip():
+        raise ParseError("Paste a Glowroot JDBC trace above.")
+    if _is_verbose(raw):
+        sql, param_block = _split_verbose(raw)
+    else:
+        sql, param_block = _split_compact(raw)
+    if not sql.strip():
+        raise ParseError("No SQL found in the trace.")
+    params = _parse_param_list(param_block)
+    return sql, params
 
 
 def generate_explain_sql(sql: str, params: list[str], options: dict) -> str:

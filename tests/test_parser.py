@@ -331,3 +331,65 @@ def test_delete_without_analyze_is_not_wrapped():
     )
     assert "BEGIN;" not in result
     assert "ROLLBACK;" not in result
+
+
+def test_integration_compact_single_string():
+    raw = load("compact_single_string.txt")
+    sql, params = parse_glowroot_trace(raw)
+    assert params == ["'SM2asR96Qwi'"]
+    assert sql.count('?') == 1
+    result = generate_explain_sql(sql, params, DEFAULT_OPTIONS)
+    assert "'SM2asR96Qwi'" in result
+    assert '?' not in result
+
+
+def test_integration_verbose_string_and_integer():
+    raw = load("verbose_string_integer.txt")
+    sql, params = parse_glowroot_trace(raw)
+    assert params == ["'130713_P6'", "1"]
+    assert sql.count('?') == 2
+    result = generate_explain_sql(sql, params, DEFAULT_OPTIONS)
+    assert "'130713_P6'" in result
+    assert '?' not in result
+
+
+def test_integration_verbose_strings_and_booleans():
+    raw = load("verbose_strings_booleans.txt")
+    sql, params = parse_glowroot_trace(raw)
+    assert "TRUE" in params
+    assert "'in3pSeq1UNJ'" == params[-1]
+    assert sql.count('?') == len(params)
+    result = generate_explain_sql(sql, params, DEFAULT_OPTIONS)
+    assert '?' not in result
+    assert "TRUE" in result
+
+
+def test_integration_verbose_with_null():
+    raw = load("verbose_with_null.txt")
+    sql, params = parse_glowroot_trace(raw)
+    assert params[-1] == "NULL"
+    assert sql.count('?') == len(params)
+    result = generate_explain_sql(sql, params, DEFAULT_OPTIONS)
+    assert '?' not in result
+    # last substituted value is NULL, followed by ;
+    assert result.rstrip().endswith("NULL;")
+
+
+def test_integration_compact_64_integer_params():
+    raw = load("compact_large_integers.txt")
+    sql, params = parse_glowroot_trace(raw)
+    assert len(params) == 64
+    assert all(p.isdigit() for p in params)
+    result = generate_explain_sql(sql, params, DEFAULT_OPTIONS)
+    assert '?' not in result
+    assert "385870" in result
+
+
+def test_integration_empty_input_raises():
+    with pytest.raises(ParseError, match="Paste a Glowroot JDBC trace above"):
+        parse_glowroot_trace("")
+
+
+def test_integration_no_param_block_raises():
+    with pytest.raises(ParseError, match="Could not find a parameter list"):
+        parse_glowroot_trace("jdbc query: SELECT 1 WHERE x = 1")
