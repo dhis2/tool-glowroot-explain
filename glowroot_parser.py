@@ -61,6 +61,8 @@ def _parse_param_list(param_block: str) -> list[str]:
                         continue
                     break
                 j += 1
+            if j >= len(content):
+                raise ParseError(f"Unterminated string literal in parameter block at position {i}.")
             params.append(content[i:j + 1])
             i = j + 1
         else:

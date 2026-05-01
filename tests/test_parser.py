@@ -172,3 +172,8 @@ def test_parse_string_with_escaped_single_quote():
     # SQL uses '' to escape a single quote inside a string
     result = _parse_param_list("['it''s a test', 42]")
     assert result == ["'it''s a test'", "42"]
+
+
+def test_parse_unterminated_string_raises():
+    with pytest.raises(ParseError, match="Unterminated string"):
+        _parse_param_list("['no closing quote, 42]")
