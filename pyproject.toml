@@ -5,6 +5,9 @@ description = "Paste a Glowroot JDBC trace, get a ready-to-run PostgreSQL EXPLAI
 requires-python = ">=3.11"
 dependencies = ["flask"]
 
+[tool.setuptools]
+py-modules = ["app", "glowroot_parser"]
+
 [project.scripts]
 glowroot-explain = "app:main"
 
