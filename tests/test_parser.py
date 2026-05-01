@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError, _is_verbose, _split_verbose
+from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError, _is_verbose, _split_verbose, _split_compact
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -73,4 +73,42 @@ def test_split_verbose_works_without_rows_section():
     raw = "jdbc query:\n\nSELECT 1\n\nparameters:\n\n  [42]\n"
     sql, param_block = _split_verbose(raw)
     assert sql == "SELECT 1"
+    assert param_block == "[42]"
+
+
+def test_split_compact_extracts_sql():
+    raw = "jdbc query: SELECT 1 WHERE x = ? ['hello'] => 5 rows"
+    sql, _ = _split_compact(raw)
+    assert sql == "SELECT 1 WHERE x = ?"
+
+
+def test_split_compact_extracts_param_block():
+    raw = "jdbc query: SELECT 1 WHERE x = ? ['hello'] => 5 rows"
+    _, param_block = _split_compact(raw)
+    assert param_block == "['hello']"
+
+
+def test_split_compact_strips_jdbc_prefix_case_insensitive():
+    raw = "JDBC QUERY: SELECT 1 WHERE x = ? [42] => 1 row"
+    sql, _ = _split_compact(raw)
+    assert sql == "SELECT 1 WHERE x = ?"
+
+
+def test_split_compact_handles_multiple_params():
+    raw = "jdbc query: SELECT 1 WHERE x = ? AND y = ? [42, 'abc'] => 0 rows"
+    sql, param_block = _split_compact(raw)
+    assert sql == "SELECT 1 WHERE x = ? AND y = ?"
+    assert param_block == "[42, 'abc']"
+
+
+def test_split_compact_raises_when_no_bracket():
+    with pytest.raises(ParseError, match="Could not find a parameter list"):
+        _split_compact("jdbc query: SELECT 1 WHERE x = 1")
+
+
+def test_split_compact_works_without_row_count_suffix():
+    # '=> N rows' at the end is optional
+    raw = "jdbc query: SELECT 1 WHERE x = ? [42]"
+    sql, param_block = _split_compact(raw)
+    assert sql == "SELECT 1 WHERE x = ?"
     assert param_block == "[42]"
