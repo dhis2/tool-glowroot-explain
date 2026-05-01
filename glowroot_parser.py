@@ -5,6 +5,12 @@ class ParseError(ValueError):
     pass
 
 
+_OPTION_ORDER = [
+    "analyze", "verbose", "costs", "settings", "memory", "generic_plan",
+    "buffers", "timing", "wal", "summary",
+]
+
+
 def _is_verbose(raw: str) -> bool:
     return bool(re.search(r'^\s*parameters:\s*$', raw, re.MULTILINE))
 
@@ -92,6 +98,12 @@ def _substitute(sql: str, params: list[str]) -> str:
         raise ParseError(f"Found {len(params)} parameters but SQL only has {count} '?' placeholders.")
     parts = sql.split('?')
     return ''.join(part + param for part, param in zip(parts, params)) + parts[-1]
+
+
+def _build_explain_clause(options: dict) -> str:
+    parts = [k.upper() for k in _OPTION_ORDER if options.get(k)]
+    parts.append(f"FORMAT {options.get('format', 'TEXT')}")
+    return f"EXPLAIN ({', '.join(parts)})"
 
 
 def parse_glowroot_trace(raw: str) -> tuple[str, list[str]]:

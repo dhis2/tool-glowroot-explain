@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError, _is_verbose, _split_verbose, _split_compact, _parse_param_list, _substitute
+from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError, _is_verbose, _split_verbose, _split_compact, _parse_param_list, _substitute, _build_explain_clause
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -216,3 +216,38 @@ def test_substitute_no_placeholders_no_params_is_valid():
 
 def test_substitute_param_containing_question_mark():
     assert _substitute("WHERE a = ? AND b = ?", ["'what?'", "42"]) == "WHERE a = 'what?' AND b = 42"
+
+
+_ALL_OFF = {k: False for k in ["analyze","verbose","costs","settings","memory","generic_plan","buffers","timing","wal","summary"]}
+
+
+def test_explain_clause_no_boolean_options():
+    opts = {**_ALL_OFF, "format": "TEXT"}
+    assert _build_explain_clause(opts) == "EXPLAIN (FORMAT TEXT)"
+
+
+def test_explain_clause_costs_only():
+    opts = {**_ALL_OFF, "costs": True, "format": "TEXT"}
+    assert _build_explain_clause(opts) == "EXPLAIN (COSTS, FORMAT TEXT)"
+
+
+def test_explain_clause_analyze_buffers_timing():
+    opts = {**_ALL_OFF, "analyze": True, "buffers": True, "timing": True, "format": "TEXT"}
+    assert _build_explain_clause(opts) == "EXPLAIN (ANALYZE, BUFFERS, TIMING, FORMAT TEXT)"
+
+
+def test_explain_clause_canonical_order():
+    # All boolean options on except GENERIC_PLAN — verify table order from spec
+    opts = {**_ALL_OFF, "analyze": True, "verbose": True, "costs": True, "settings": True,
+            "memory": True, "buffers": True, "timing": True, "wal": True, "summary": True, "format": "JSON"}
+    assert _build_explain_clause(opts) == "EXPLAIN (ANALYZE, VERBOSE, COSTS, SETTINGS, MEMORY, BUFFERS, TIMING, WAL, SUMMARY, FORMAT JSON)"
+
+
+def test_explain_clause_format_json():
+    opts = {**_ALL_OFF, "format": "JSON"}
+    assert _build_explain_clause(opts) == "EXPLAIN (FORMAT JSON)"
+
+
+def test_explain_clause_format_always_last():
+    opts = {**_ALL_OFF, "verbose": True, "format": "YAML"}
+    assert _build_explain_clause(opts).endswith("FORMAT YAML)")
