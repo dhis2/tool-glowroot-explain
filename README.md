@@ -12,11 +12,38 @@ Supports both Glowroot trace formats (compact single-line and verbose multi-sect
 
 [uv](https://docs.astral.sh/uv/) — no other installation needed.
 
-## Usage
+## Installation
+
+### Install from GitHub (recommended)
+
+Install directly from GitHub using `uv` without cloning the repository:
 
 ```bash
+# Install latest
+uv tool install git+https://github.com/dhis2/tool-glowroot-explain
+
+# Pin a specific version (see https://github.com/dhis2/tool-glowroot-explain/releases)
+uv tool install git+https://github.com/dhis2/tool-glowroot-explain@<tag>
+
+# Update to latest
+uv tool install --reinstall git+https://github.com/dhis2/tool-glowroot-explain
+```
+
+Then run from anywhere:
+
+```bash
+glowroot-explain
+```
+
+### Local development
+
+```bash
+git clone https://github.com/dhis2/tool-glowroot-explain.git
+cd tool-glowroot-explain
 uv run app.py
 ```
+
+## Usage
 
 Open [http://localhost:5000](http://localhost:5000), paste your trace, choose EXPLAIN options, click **Generate EXPLAIN**, then **Copy**.
 

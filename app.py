@@ -187,5 +187,9 @@ def transform():
         return jsonify({"error": str(e)}), 400
 
 
+def main():
+    app.run(debug=False)
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    main()
