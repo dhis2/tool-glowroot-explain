@@ -3,8 +3,13 @@
 # dependencies = ["flask"]
 # ///
 
+import shutil
+import subprocess
+
 from flask import Flask, render_template_string, request, jsonify
 from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError
+
+_PG_FORMAT = shutil.which("pg_format")
 
 app = Flask(__name__)
 
@@ -30,6 +35,8 @@ HTML = """<!DOCTYPE html>
     button { padding: 0.4rem 1.1rem; cursor: pointer; }
     #copy-btn { margin-top: 0.4rem; }
     select { padding: 0.15rem 0.3rem; }
+    #pgformat-row { margin: 0.5rem 0; display: none; }
+    #pgformat-row label { display: flex; align-items: center; gap: 0.3rem; cursor: pointer; font-size: 0.9rem; color: #374151; }
   </style>
 </head>
 <body>
@@ -58,6 +65,10 @@ HTML = """<!DOCTYPE html>
     <label><input type="checkbox" id="opt-summary" disabled> SUMMARY</label>
   </div>
 
+  <div id="pgformat-row">
+    <label><input type="checkbox" id="opt-pgformat" checked> Format SQL with pg_format</label>
+  </div>
+
   <div style="margin: 1rem 0;">
     <button id="go-btn">Generate EXPLAIN</button>
   </div>
@@ -69,11 +80,28 @@ HTML = """<!DOCTYPE html>
   <div><button id="copy-btn">Copy</button></div>
 
   <script>
-    const analyzeEl   = document.getElementById('opt-analyze');
-    const genericEl   = document.getElementById('opt-generic_plan');
+    const analyzeEl    = document.getElementById('opt-analyze');
+    const genericEl    = document.getElementById('opt-generic_plan');
     const analyzeGroup = document.getElementById('analyze-group');
-    const depIds      = ['opt-buffers', 'opt-timing', 'opt-wal', 'opt-summary'];
-    const warning     = document.getElementById('warning');
+    const depIds       = ['opt-buffers', 'opt-timing', 'opt-wal', 'opt-summary'];
+    const warning      = document.getElementById('warning');
+    const pgformatRow  = document.getElementById('pgformat-row');
+    const pgformatEl   = document.getElementById('opt-pgformat');
+    const formatEl     = document.getElementById('opt-format');
+
+    let hasPgFormat = false;
+
+    fetch('/capabilities').then(r => r.json()).then(caps => {
+      hasPgFormat = caps.pg_format;
+      syncPgFormat();
+    });
+
+    function syncPgFormat() {
+      const textMode = formatEl.value === 'TEXT';
+      pgformatRow.style.display = (hasPgFormat && textMode) ? 'block' : 'none';
+    }
+
+    formatEl.addEventListener('change', syncPgFormat);
 
     function syncAnalyze() {
       const on = analyzeEl.checked;
@@ -130,7 +158,8 @@ HTML = """<!DOCTYPE html>
           timing:       document.getElementById('opt-timing').checked,
           wal:          document.getElementById('opt-wal').checked,
           summary:      document.getElementById('opt-summary').checked,
-          format:       document.getElementById('opt-format').value,
+          format:       formatEl.value,
+          format_sql:   hasPgFormat && pgformatEl.checked && formatEl.value === 'TEXT',
         }),
       });
       const data = await resp.json();
@@ -154,6 +183,27 @@ HTML = """<!DOCTYPE html>
 @app.get("/")
 def index():
     return render_template_string(HTML)
+
+
+@app.get("/capabilities")
+def capabilities():
+    return jsonify({"pg_format": _PG_FORMAT is not None})
+
+
+def _run_pg_format(sql: str) -> str:
+    try:
+        result = subprocess.run(
+            [_PG_FORMAT, "-"],
+            input=sql,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            return result.stdout
+    except Exception:
+        pass
+    return sql
 
 
 _VALID_FORMATS = {"TEXT", "JSON", "XML", "YAML"}
@@ -182,6 +232,8 @@ def transform():
     try:
         sql, params = parse_glowroot_trace(raw)
         result = generate_explain_sql(sql, params, options)
+        if data.get("format_sql") and _PG_FORMAT:
+            result = _run_pg_format(result)
         return jsonify({"sql": result})
     except ParseError as e:
         return jsonify({"error": str(e)}), 400
