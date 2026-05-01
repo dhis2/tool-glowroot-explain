@@ -45,7 +45,7 @@ Tests are written **test-first**: failing tests are written against the real Glo
 Each test asserts: given this raw trace input + these EXPLAIN options, the output SQL equals the expected string exactly.
 
 Additional parser behaviour tests (not tied to a specific fixture):
-- A trace whose SQL starts with `DELETE` and ANALYZE enabled produces output wrapped in `BEGIN; ... ROLLBACK;`
+- A trace whose SQL starts with `DELETE` and ANALYZE enabled produces output wrapped in `BEGIN;` / `ROLLBACK;` including the safety comment line `-- Statement type may modify data: wrapped in transaction for safety` — the full comment text is part of the exact-string assertion
 - A trace with a placeholder/parameter count mismatch returns the correct error message
 - A trace with no `[...]` block returns the correct error message
 
@@ -133,6 +133,8 @@ Options are presented as checkboxes and a format dropdown. Dependency rules are 
 | SUMMARY | on |
 
 When ANALYZE is unchecked, all ANALYZE-dependent options are greyed out and unchecked.
+
+**EXPLAIN clause rendering:** only checked options are emitted, as bare keywords (e.g. `ANALYZE`, not `ANALYZE TRUE`). Unchecked options are omitted entirely — including COSTS, even though it is PostgreSQL's default. Options appear in the order listed in the tables above, with FORMAT always last. Example with ANALYZE + BUFFERS + TIMING + COSTS + FORMAT TEXT: `EXPLAIN (ANALYZE, BUFFERS, TIMING, COSTS, FORMAT TEXT)`.
 
 **GENERIC_PLAN / ANALYZE mutual exclusion:** these two options cannot be active simultaneously.
 - If ANALYZE is checked while GENERIC_PLAN is on: uncheck and disable GENERIC_PLAN.
