@@ -1,3 +1,2 @@
 [tool.pytest.ini_options]
-# Allow "no tests ran" without failing — this project starts with skeleton files only
 addopts = "--tb=short"
