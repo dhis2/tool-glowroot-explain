@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError, _is_verbose, _split_verbose, _split_compact, _parse_param_list
+from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError, _is_verbose, _split_verbose, _split_compact, _parse_param_list, _substitute
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -177,3 +177,38 @@ def test_parse_string_with_escaped_single_quote():
 def test_parse_unterminated_string_raises():
     with pytest.raises(ParseError, match="Unterminated string"):
         _parse_param_list("['no closing quote, 42]")
+
+
+def test_substitute_single_string():
+    assert _substitute("WHERE x = ?", ["'hello'"]) == "WHERE x = 'hello'"
+
+
+def test_substitute_multiple_params_left_to_right():
+    assert _substitute("WHERE a = ? AND b = ?", ["1", "'two'"]) == "WHERE a = 1 AND b = 'two'"
+
+
+def test_substitute_null():
+    assert _substitute("WHERE x = ?", ["NULL"]) == "WHERE x = NULL"
+
+
+def test_substitute_boolean():
+    assert _substitute("WHERE active = ?", ["TRUE"]) == "WHERE active = TRUE"
+
+
+def test_substitute_raises_too_few_params():
+    with pytest.raises(ParseError, match=r"SQL has 2 '\?' placeholders but only 1 parameters were found"):
+        _substitute("WHERE a = ? AND b = ?", ["1"])
+
+
+def test_substitute_raises_too_many_params():
+    with pytest.raises(ParseError, match=r"Found 2 parameters but SQL only has 1 '\?' placeholders"):
+        _substitute("WHERE a = ?", ["1", "2"])
+
+
+def test_substitute_raises_empty_params_with_placeholders():
+    with pytest.raises(ParseError, match=r"SQL has 1 '\?' placeholders but the parameter list is empty"):
+        _substitute("WHERE a = ?", [])
+
+
+def test_substitute_no_placeholders_no_params_is_valid():
+    assert _substitute("SELECT 1", []) == "SELECT 1"

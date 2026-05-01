@@ -82,6 +82,20 @@ def _parse_param_list(param_block: str) -> list[str]:
     return params
 
 
+def _substitute(sql: str, params: list[str]) -> str:
+    count = sql.count('?')
+    if count > 0 and len(params) == 0:
+        raise ParseError(f"SQL has {count} '?' placeholders but the parameter list is empty.")
+    if count > len(params):
+        raise ParseError(f"SQL has {count} '?' placeholders but only {len(params)} parameters were found.")
+    if len(params) > count:
+        raise ParseError(f"Found {len(params)} parameters but SQL only has {count} '?' placeholders.")
+    result = sql
+    for param in params:
+        result = result.replace('?', param, 1)
+    return result
+
+
 def parse_glowroot_trace(raw: str) -> tuple[str, list[str]]:
     raise NotImplementedError
 
