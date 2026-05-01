@@ -1,0 +1,58 @@
+jdbc query:
+
+SELECT programsta0_.programstageid AS programs1_179_,
+       programsta0_.uid AS uid2_179_,
+       programsta0_.code AS code3_179_,
+       programsta0_.created AS created4_179_,
+       programsta0_.lastUpdated AS lastupda5_179_,
+       programsta0_.lastupdatedby AS lastupda6_179_,
+       programsta0_.name AS name7_179_,
+       programsta0_.description AS descript8_179_,
+       programsta0_.formName AS formname9_179_,
+       programsta0_.mindaysfromstart AS mindays10_179_,
+       programsta0_.programid AS program11_179_,
+       programsta0_.repeatable AS repeata12_179_,
+       programsta0_.dataentryformid AS dataent13_179_,
+       programsta0_.standardInterval AS standar14_179_,
+       programsta0_.executiondatelabel AS executi15_179_,
+       programsta0_.duedatelabel AS duedate16_179_,
+       programsta0_.autoGenerateEvent AS autogen17_179_,
+       programsta0_.validationstrategy AS validat18_179_,
+       programsta0_.displayGenerateEventBox AS display19_179_,
+       programsta0_.generatedByEnrollmentDate AS generat20_179_,
+       programsta0_.blockEntryForm AS blocken21_179_,
+       programsta0_.remindCompleted AS remindc22_179_,
+       programsta0_.allowGenerateNextVisit AS allowge23_179_,
+       programsta0_.openAfterEnrollment AS openaft24_179_,
+       programsta0_.reportDateToUse AS reportd25_179_,
+       programsta0_.preGenerateUID AS pregene26_179_,
+       programsta0_.style AS style27_179_,
+       programsta0_.hideDueDate AS hidedue28_179_,
+       programsta0_.sort_order AS sort_or29_179_,
+       programsta0_.translations AS transla30_179_,
+       programsta0_.featuretype AS feature31_179_,
+       programsta0_.enableuserassignment AS enableu32_179_,
+       programsta0_.periodtypeid AS periodt33_179_,
+       programsta0_.attributeValues AS attribu34_179_,
+       programsta0_.userid AS userid35_179_,
+       programsta0_.sharing AS sharing36_179_,
+       programsta0_.nextscheduledateid AS nextsch37_179_,
+       programsta0_.referral AS referra38_179_
+  FROM programstage programsta0_
+ WHERE (jsonb_extract_path_text (programsta0_.sharing, ?) LIKE ?
+      OR jsonb_extract_path_text (programsta0_.sharing, ?) = ?
+      OR jsonb_extract_path_text (programsta0_.sharing, ?) IS null
+      OR jsonb_extract_path_text (programsta0_.sharing, ?) IS null
+      OR jsonb_extract_path_text (programsta0_.sharing, ?) = ?
+      OR jsonb_extract_path_text (programsta0_.sharing, ?) = ?
+      OR jsonb_has_user_id (programsta0_.sharing, ?) = ?
+     AND jsonb_check_user_access (programsta0_.sharing, ?, ?) = ?)
+   AND programsta0_.uid = ?
+
+parameters:
+
+  ['public', 'r%', 'public', 'null', 'public', 'owner', 'owner', 'null', 'owner', 'qweRt000210', 'qweRt000210', true, 'qweRt000210', 'r%', true, 'in3pSeq1UNJ']
+
+rows:
+
+  => 0 rows

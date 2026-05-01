@@ -1,0 +1,52 @@
+jdbc query:
+
+SELECT trackedent0_.trackedentityattributeid AS trackede1_214_,
+       trackedent0_.uid AS uid2_214_,
+       trackedent0_.code AS code3_214_,
+       trackedent0_.created AS created4_214_,
+       trackedent0_.lastUpdated AS lastupda5_214_,
+       trackedent0_.lastupdatedby AS lastupda6_214_,
+       trackedent0_.name AS name7_214_,
+       trackedent0_.shortname AS shortnam8_214_,
+       trackedent0_.description AS descript9_214_,
+       trackedent0_.formName AS formnam10_214_,
+       trackedent0_.valuetype AS valuety11_214_,
+       trackedent0_.aggregationType AS aggrega12_214_,
+       trackedent0_.optionsetid AS options13_214_,
+       trackedent0_.inherit AS inherit14_214_,
+       trackedent0_.expression AS express15_214_,
+       trackedent0_.displayOnVisitSchedule AS display16_214_,
+       trackedent0_.sortOrderInVisitSchedule AS sortord17_214_,
+       trackedent0_.displayInListNoProgram AS display18_214_,
+       trackedent0_.sortOrderInListNoProgram AS sortord19_214_,
+       trackedent0_.confidential AS confide20_214_,
+       trackedent0_.uniquefield AS uniquef21_214_,
+       trackedent0_.generated AS generat22_214_,
+       trackedent0_.pattern AS pattern23_214_,
+       trackedent0_.textpattern AS textpat24_214_,
+       trackedent0_.fieldMask AS fieldma25_214_,
+       trackedent0_.style AS style26_214_,
+       trackedent0_.orgunitScope AS orgunit27_214_,
+       trackedent0_.skipsynchronization AS skipsyn28_214_,
+       trackedent0_.translations AS transla29_214_,
+       trackedent0_.userid AS userid30_214_,
+       trackedent0_.sharing AS sharing31_214_,
+       trackedent0_.attributeValues AS attribu32_214_
+  FROM trackedentityattribute trackedent0_
+ WHERE (jsonb_extract_path_text (trackedent0_.sharing, ?) LIKE ?
+      OR jsonb_extract_path_text (trackedent0_.sharing, ?) = ?
+      OR jsonb_extract_path_text (trackedent0_.sharing, ?) IS null
+      OR jsonb_extract_path_text (trackedent0_.sharing, ?) IS null
+      OR jsonb_extract_path_text (trackedent0_.sharing, ?) = ?
+      OR jsonb_extract_path_text (trackedent0_.sharing, ?) = ?
+      OR jsonb_has_user_id (trackedent0_.sharing, ?) = ?
+     AND jsonb_check_user_access (trackedent0_.sharing, ?, ?) = ?)
+   AND trackedent0_.uid = ?
+
+parameters:
+
+  ['public', 'r%', 'public', 'null', 'public', 'owner', 'owner', 'null', 'owner', 'qweRt000210', 'qweRt000210', true, 'qweRt000210', 'r%', true, NULL]
+
+rows:
+
+  => 0 rows
