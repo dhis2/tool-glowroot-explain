@@ -102,7 +102,7 @@ def _substitute(sql: str, params: list[str]) -> str:
 
 def _build_explain_clause(options: dict) -> str:
     parts = [k.upper() for k in _OPTION_ORDER if options.get(k)]
-    parts.append(f"FORMAT {options.get('format', 'TEXT')}")
+    parts.append(f"FORMAT {options.get('format', 'TEXT').upper()}")
     return f"EXPLAIN ({', '.join(parts)})"
 
 
