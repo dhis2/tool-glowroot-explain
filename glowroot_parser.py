@@ -115,8 +115,8 @@ def _is_dml(sql: str) -> bool:
     if words[0] in _DML_FIRST_WORDS:
         return True
     # Only "CREATE TABLE ... AS (SELECT ...)" is DML — plain DDL "CREATE TABLE foo (...)" is not
-    if len(words) >= 3 and words[0] == "create" and words[1] == "table" and "as" in words:
-        return True
+    if len(words) >= 3 and words[0] == "create" and words[1] == "table":
+        return any(w == "as" for w in words[3:])
     return False
 
 

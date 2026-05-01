@@ -321,3 +321,13 @@ def test_select_with_analyze_is_not_wrapped():
     )
     assert "BEGIN;" not in result
     assert "ROLLBACK;" not in result
+
+
+def test_delete_without_analyze_is_not_wrapped():
+    result = generate_explain_sql(
+        "DELETE FROM foo WHERE id = 1",
+        [],
+        {**DEFAULT_OPTIONS},
+    )
+    assert "BEGIN;" not in result
+    assert "ROLLBACK;" not in result
