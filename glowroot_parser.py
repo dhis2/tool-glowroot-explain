@@ -35,6 +35,51 @@ def _split_compact(raw: str) -> tuple[str, str]:
     return sql, param_block
 
 
+def _parse_param_list(param_block: str) -> list[str]:
+    content = param_block.strip()
+    if content.startswith('['):
+        content = content[1:]
+    if content.endswith(']'):
+        content = content[:-1]
+    content = content.strip()
+    if not content:
+        return []
+
+    params: list[str] = []
+    i = 0
+    while i < len(content):
+        if content[i] in ' \t':
+            i += 1
+        elif content[i] == ',':
+            i += 1
+        elif content[i] == "'":
+            j = i + 1
+            while j < len(content):
+                if content[j] == "'":
+                    if j + 1 < len(content) and content[j + 1] == "'":
+                        j += 2  # '' is an escaped single quote — skip both chars
+                        continue
+                    break
+                j += 1
+            params.append(content[i:j + 1])
+            i = j + 1
+        else:
+            j = i
+            while j < len(content) and content[j] != ',':
+                j += 1
+            val = content[i:j].strip()
+            if val.lower() == 'true':
+                params.append('TRUE')
+            elif val.lower() == 'false':
+                params.append('FALSE')
+            elif val.lower() == 'null':
+                params.append('NULL')
+            else:
+                params.append(val)
+            i = j
+    return params
+
+
 def parse_glowroot_trace(raw: str) -> tuple[str, list[str]]:
     raise NotImplementedError
 

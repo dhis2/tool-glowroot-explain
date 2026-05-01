@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError, _is_verbose, _split_verbose, _split_compact
+from glowroot_parser import parse_glowroot_trace, generate_explain_sql, ParseError, _is_verbose, _split_verbose, _split_compact, _parse_param_list
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -112,3 +112,63 @@ def test_split_compact_works_without_row_count_suffix():
     sql, param_block = _split_compact(raw)
     assert sql == "SELECT 1 WHERE x = ?"
     assert param_block == "[42]"
+
+
+def test_parse_single_string():
+    assert _parse_param_list("['SM2asR96Qwi']") == ["'SM2asR96Qwi'"]
+
+
+def test_parse_single_integer():
+    assert _parse_param_list("[42]") == ["42"]
+
+
+def test_parse_single_float():
+    assert _parse_param_list("[3.14]") == ["3.14"]
+
+
+def test_parse_true():
+    assert _parse_param_list("[true]") == ["TRUE"]
+
+
+def test_parse_false():
+    assert _parse_param_list("[false]") == ["FALSE"]
+
+
+def test_parse_unquoted_null_uppercase():
+    assert _parse_param_list("[NULL]") == ["NULL"]
+
+
+def test_parse_unquoted_null_lowercase():
+    assert _parse_param_list("[null]") == ["NULL"]
+
+
+def test_parse_quoted_null_is_a_string():
+    assert _parse_param_list("['null']") == ["'null'"]
+
+
+def test_parse_mixed_string_and_integer():
+    assert _parse_param_list("['130713_P6', 1]") == ["'130713_P6'", "1"]
+
+
+def test_parse_string_with_comma_inside_does_not_split():
+    assert _parse_param_list("['hello, world', 42]") == ["'hello, world'", "42"]
+
+
+def test_parse_strings_booleans_null():
+    result = _parse_param_list("['public', 'r%', true, NULL]")
+    assert result == ["'public'", "'r%'", "TRUE", "NULL"]
+
+
+def test_parse_empty_list():
+    assert _parse_param_list("[]") == []
+
+
+def test_parse_large_integer_list():
+    result = _parse_param_list("[1, 2, 3, 4, 5]")
+    assert result == ["1", "2", "3", "4", "5"]
+
+
+def test_parse_string_with_escaped_single_quote():
+    # SQL uses '' to escape a single quote inside a string
+    result = _parse_param_list("['it''s a test', 42]")
+    assert result == ["'it''s a test'", "42"]
