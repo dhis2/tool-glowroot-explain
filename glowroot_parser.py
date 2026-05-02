@@ -34,7 +34,7 @@ def _split_compact(raw: str) -> tuple[str, str]:
     # SQL-side brackets (array subscripts, JSON operators) always appear before the param block.
     bracket_start = text.rfind('[')
     if bracket_start == -1:
-        raise ParseError("Could not find a parameter list '[...]' in the trace.")
+        return text, '[]'
     bracket_end = text.find(']', bracket_start)
     if bracket_end == -1:
         raise ParseError("Could not find a parameter list '[...]' in the trace.")

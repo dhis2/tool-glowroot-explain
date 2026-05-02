@@ -1,0 +1,15 @@
+SELECT
+    pi.uid
+FROM programinstance pi
+JOIN organisationunit ou
+    ON ou.organisationunitid = pi.organisationunitid
+WHERE pi.programid = 4170
+AND ou.path LIKE '%RRhUcshq3Kz%'
+and pi.deleted =  false
+AND NOT EXISTS (
+    SELECT 1
+    FROM programstageinstance psi
+    WHERE psi.programinstanceid = pi.programinstanceid
+      AND psi.programstageid = 4117
+)
+limit 100;

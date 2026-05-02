@@ -101,9 +101,10 @@ def test_split_compact_handles_multiple_params():
     assert param_block == "[42, 'abc']"
 
 
-def test_split_compact_raises_when_no_bracket():
-    with pytest.raises(ParseError, match="Could not find a parameter list"):
-        _split_compact("jdbc query: SELECT 1 WHERE x = 1")
+def test_split_compact_no_bracket_returns_empty_params():
+    sql, param_block = _split_compact("jdbc query: SELECT 1 WHERE x = 1")
+    assert sql == "SELECT 1 WHERE x = 1"
+    assert param_block == "[]"
 
 
 def test_split_compact_works_without_row_count_suffix():
@@ -390,6 +391,18 @@ def test_integration_empty_input_raises():
         parse_glowroot_trace("")
 
 
-def test_integration_no_param_block_raises():
-    with pytest.raises(ParseError, match="Could not find a parameter list"):
-        parse_glowroot_trace("jdbc query: SELECT 1 WHERE x = 1")
+def test_integration_no_param_block_with_placeholder_raises():
+    sql, params = parse_glowroot_trace("jdbc query: SELECT 1 WHERE x = ?")
+    with pytest.raises(ParseError, match=r"SQL has 1 '\?' placeholders but the parameter list is empty"):
+        generate_explain_sql(sql, params, DEFAULT_OPTIONS)
+
+
+def test_integration_no_params_no_placeholders():
+    raw = load("compact_no_params.txt")
+    sql, params = parse_glowroot_trace(raw)
+    assert params == []
+    assert '?' not in sql
+    result = generate_explain_sql(sql, params, DEFAULT_OPTIONS)
+    assert "EXPLAIN" in result
+    assert "4170" in result
+    assert "RRhUcshq3Kz" in result
