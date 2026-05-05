@@ -84,8 +84,10 @@ def _parse_param_list(param_block: str) -> list[str]:
                 params.append('FALSE')
             elif val.lower() == 'null':
                 params.append('NULL')
-            else:
+            elif re.match(r'^-?\d+(\.\d+)?$', val):
                 params.append(val)
+            else:
+                params.append(f"'{val}'")
             i = j
     return params
 

@@ -175,6 +175,22 @@ def test_parse_string_with_escaped_single_quote():
     assert result == ["'it''s a test'", "42"]
 
 
+def test_parse_date_param_is_quoted():
+    assert _parse_param_list("[2023-01-15]") == ["'2023-01-15'"]
+
+
+def test_parse_timestamp_param_is_quoted():
+    assert _parse_param_list("[2023-01-15 10:30:00.000]") == ["'2023-01-15 10:30:00.000'"]
+
+
+def test_parse_timestamp_no_millis_is_quoted():
+    assert _parse_param_list("[2023-01-15 10:30:00]") == ["'2023-01-15 10:30:00'"]
+
+
+def test_parse_date_mixed_with_integer():
+    assert _parse_param_list("[2023-01-15, 42]") == ["'2023-01-15'", "42"]
+
+
 def test_parse_unterminated_string_raises():
     with pytest.raises(ParseError, match="Unterminated string"):
         _parse_param_list("['no closing quote, 42]")
